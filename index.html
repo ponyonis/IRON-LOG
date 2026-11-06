@@ -88,6 +88,15 @@
     </section>
   </main>
 
+  <dialog id="historyEditor" aria-labelledby="historyEditorTitle">
+    <h2 id="historyEditorTitle">トレーニング記録を編集</h2>
+    <p id="historyEditDate"></p>
+    <p class="muted edit-help">日付と種目は変更できません。「変更を保存」を押すまで保存済みの記録は変わりません。</p>
+    <div id="historyEditExercises"></div>
+    <p id="historyEditStatus" role="status" aria-live="polite"></p>
+    <button id="historyEditSave" class="primary-button" type="button">変更を保存</button>
+    <button id="historyEditCancel" class="secondary-button" type="button">キャンセル</button>
+  </dialog>
   <script src="script.js"></script>
 </body>
 </html>

@@ -284,3 +284,11 @@ h1 { margin-bottom: 4px; }
 .restore-ack { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
 #restoreAcknowledged { width: 20px; min-height: 20px; height: 20px; flex: 0 0 20px; margin: 2px 0 0; accent-color: #ff963d; }
 #restoreStatus { font-size: 13px; overflow-wrap: anywhere; }
+
+#historyEditor { width: calc(100% - 24px); max-width: 600px; max-height: calc(100dvh - 32px); padding: 20px 12px; border: 1px solid #555; border-radius: 14px; background: #1b1b1b; color: #fff; overflow-y: auto; overflow-wrap: anywhere; }
+#historyEditor::backdrop { background: #000b; }
+#historyEditor h2 { margin-top: 0; font-size: 20px; }
+#historyEditor .edit-help, #historyEditStatus { font-size: 13px; }
+#historyEditStatus { color: #ffb77c; }
+#historyEditor .exercise-card { padding: 14px 10px; }
+#historyEditor .set-row { grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 32px; gap: 8px; }

@@ -248,7 +248,8 @@ function updateHistory() {
 
   historyList.className = "";
 
-  workouts.slice().reverse().slice(0, 10).forEach(workout => {
+  const historySnapshot = JSON.stringify(workouts);
+  workouts.map((workout, index) => ({ workout, index })).reverse().slice(0, 10).forEach(({ workout, index }) => {
     const item = document.createElement("div");
     item.className = "history-item";
 
@@ -265,7 +266,13 @@ function updateHistory() {
       })
       .join(" | ");
 
-    item.append(date, detail);
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "small-button edit-history";
+    edit.textContent = "編集";
+    edit.setAttribute("aria-label", workout.date + "のトレーニング記録を編集");
+    edit.addEventListener("click", () => openHistoryEditor(index, historySnapshot));
+    item.append(date, detail, edit);
     historyList.appendChild(item);
   });
 }
@@ -578,6 +585,122 @@ restoreConfirm.addEventListener("click", () => {
   updateHistory();
   showHome();
   resetRestore("復元が完了しました。履歴を更新しました。");
+});
+
+const historyEditor = document.getElementById("historyEditor");
+const editExercises = document.getElementById("historyEditExercises");
+const editStatus = document.getElementById("historyEditStatus");
+let historyEdit = null;
+
+function editValues() {
+  return JSON.stringify([...editExercises.children].map(card => [...card.querySelectorAll(".set-row")].map(row =>
+    [row.querySelector(".weight").value, row.querySelector(".reps").value])));
+}
+
+function addHistoryEditSet(card, set = null) {
+  const rows = card.querySelector(".edit-sets");
+  const lastWeight = rows.lastElementChild?.querySelector(".weight").value ?? "";
+  const row = document.createElement("div");
+  row.className = "set-row";
+  row.innerHTML = '<span class="set-number"></span><label class="set-field">重量 kg<input class="weight" type="number" inputmode="decimal" min="0" step="0.5"></label><label class="set-field">回数<input class="reps" type="number" inputmode="numeric" min="1" step="1"></label><button class="remove-button edit-remove-set" type="button" aria-label="セットを削除">×</button>';
+  row.querySelector(".weight").value = set ? set.weight : lastWeight;
+  row.querySelector(".reps").value = set ? set.reps : "";
+  rows.appendChild(row);
+  rows.querySelectorAll(".set-number").forEach((number, index) => { number.textContent = index + 1; });
+}
+
+function openHistoryEditor(index, expectedSnapshot) {
+  try {
+    const original = localStorage.getItem(STORAGE_KEY);
+    const workouts = JSON.parse(original);
+    if (!Array.isArray(workouts) || JSON.stringify(workouts) !== expectedSnapshot || !workouts[index]) {
+      alert("履歴が変更されています。最新の履歴を確認してから編集してください。");
+      updateHistory();
+      return;
+    }
+    historyEdit = { original, workouts, index };
+    editExercises.replaceChildren();
+    editStatus.textContent = "";
+    document.getElementById("historyEditDate").textContent = "編集対象の日付：" + workouts[index].date;
+    workouts[index].exercises.forEach(exercise => {
+      const card = document.createElement("section"); card.className = "exercise-card";
+      const title = document.createElement("h3"); title.textContent = exercise.name;
+      const sets = document.createElement("div"); sets.className = "edit-sets";
+      const add = document.createElement("button"); add.type = "button"; add.className = "secondary-button edit-add-set"; add.textContent = "＋ セットを追加";
+      card.append(title, sets, add); editExercises.appendChild(card);
+      exercise.sets.forEach(set => addHistoryEditSet(card, set));
+    });
+    historyEdit.baseline = editValues();
+    historyEditor.showModal();
+  } catch {
+    historyEdit = null;
+    alert("記録を読み込めませんでした。保存データは変更していません。");
+  }
+}
+
+function cancelHistoryEdit() {
+  if (historyEdit && editValues() !== historyEdit.baseline && !confirm("編集内容を破棄して閉じますか？保存済みの記録は変更されません。")) return;
+  historyEditor.close();
+}
+historyEditor.addEventListener("cancel", event => { event.preventDefault(); cancelHistoryEdit(); });
+historyEditor.addEventListener("close", () => { historyEdit = null; });
+document.getElementById("historyEditCancel").addEventListener("click", cancelHistoryEdit);
+window.addEventListener("beforeunload", event => {
+  if (historyEdit && editValues() !== historyEdit.baseline) { event.preventDefault(); event.returnValue = ""; }
+});
+editExercises.addEventListener("click", event => {
+  const card = event.target.closest(".exercise-card");
+  if (!card) return;
+  if (event.target.classList.contains("edit-add-set")) addHistoryEditSet(card);
+  if (event.target.classList.contains("edit-remove-set")) {
+    event.target.closest(".set-row").remove();
+    card.querySelectorAll(".set-number").forEach((number, index) => { number.textContent = index + 1; });
+  }
+});
+document.getElementById("historyEditSave").addEventListener("click", () => {
+  if (!historyEdit || !historyEditor.open) return;
+  editStatus.textContent = "";
+  const target = historyEdit.workouts[historyEdit.index];
+  const updated = { ...target, exercises: [] };
+  for (const [index, card] of [...editExercises.children].entries()) {
+    const sets = [];
+    for (const row of card.querySelectorAll(".set-row")) {
+      const weight = row.querySelector(".weight").value;
+      const reps = row.querySelector(".reps").value;
+      if (weight === "" || reps === "" || !Number.isFinite(Number(weight)) || Number(weight) < 0 ||
+          !Number.isSafeInteger(Number(reps)) || Number(reps) <= 0) {
+        editStatus.textContent = "重量は0以上、回数は1以上の整数で入力してください。空欄のセットは保存できません。";
+        return;
+      }
+      sets.push({ ...target.exercises[index].sets[sets.length], weight: Number(weight), reps: Number(reps) });
+    }
+    if (!sets.length) { editStatus.textContent = "各種目に1セット以上必要です。"; return; }
+    updated.exercises.push({ ...target.exercises[index], sets });
+  }
+  try {
+    if (localStorage.getItem(STORAGE_KEY) !== historyEdit.original) {
+      editStatus.textContent = "編集中に保存データが変更されました。上書きせず中止しました。編集内容は画面に保持しています。必要な値を控え、閉じて最新の履歴から編集し直してください。";
+      return;
+    }
+    const workouts = historyEdit.workouts.slice();
+    workouts[historyEdit.index] = updated;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
+  } catch {
+    editStatus.textContent = "保存できませんでした。元の記録は変更していません。編集内容は保持しています。容量やアクセス制限を確認してください。";
+    return;
+  }
+  historyEditor.close();
+  updateHistory();
+  if (activeDate) {
+    if (savedDay) {
+      renderDate();
+    } else if (draftValues() === baseline) {
+      exerciseList.querySelectorAll(".exercise-card").forEach(card => initializeSets(card));
+      baseline = draftValues();
+    } else {
+      exerciseList.querySelectorAll(".exercise-card").forEach(card => updatePreviousRecord(card));
+    }
+  }
 });
 
 updateHistory();
