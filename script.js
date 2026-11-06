@@ -57,11 +57,21 @@ function getPreviousExercise(name) {
   };
 }
 
+function updatePreviousReps(card, previous = getPreviousExercise(card.querySelector(".exercise-name").value)) {
+  card.querySelectorAll(".set-row").forEach((row, index) => {
+    const reps = previous?.exercise.sets[index]?.reps;
+    const display = row.querySelector(".previous-reps");
+    display.textContent = reps ?? "－";
+    display.setAttribute("aria-label", (index + 1) + "セット目の前回の回数：" + (reps == null ? "記録なし" : reps + "回"));
+  });
+}
+
 function updatePreviousRecord(card) {
   const name = card.querySelector(".exercise-name").value;
   const display = card.querySelector(".previous-record");
   const previous = getPreviousExercise(name);
 
+  updatePreviousReps(card, previous);
   display.replaceChildren();
 
   const heading = document.createElement("div");
@@ -139,6 +149,7 @@ function createExercise() {
 function addSet(card) {
   const sets = card.querySelector(".sets");
   const number = sets.children.length + 1;
+  const previousWeight = sets.lastElementChild?.querySelector(".weight").value ?? "";
 
   const row = document.createElement("div");
   row.className = "set-row";
@@ -149,14 +160,21 @@ function addSet(card) {
       <input class="weight" type="number" inputmode="decimal"
         min="0" step="0.5" placeholder="0">
     </label>
-    <label class="set-field">回数 <span class="unit">回</span>
-      <input class="reps" type="number" inputmode="numeric"
-        min="1" step="1" placeholder="0">
-    </label>
+    <div class="set-field reps-field">回数 <span class="unit">回</span>
+      <div class="reps-split">
+        <div class="reps-reference"><span class="reps-caption">前回</span><span class="previous-reps">－</span></div>
+        <label class="reps-current"><span class="reps-caption">今回</span>
+          <input class="reps" type="number" inputmode="numeric"
+            min="1" step="1" placeholder="0">
+        </label>
+      </div>
+    </div>
     <button class="remove-button remove-set" aria-label="セットを削除">×</button>
   `;
 
+  row.querySelector(".weight").value = previousWeight;
   sets.appendChild(row);
+  updatePreviousReps(card);
 }
 
 function updateHistory() {
@@ -237,6 +255,7 @@ exerciseList.addEventListener("click", event => {
     card.querySelectorAll(".set-row .set-number").forEach((span, index) => {
       span.textContent = index + 1;
     });
+    updatePreviousReps(card);
   }
 
   if (event.target.classList.contains("remove-exercise")) {

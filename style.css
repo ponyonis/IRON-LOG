@@ -242,3 +242,24 @@ h1 { margin-bottom: 4px; }
   .exercise-title select { flex-basis: 100%; }
   .remove-exercise { margin-left: auto; font-size: 12px; }
 }
+
+/* Keep previous reps read-only and separate from the current input. */
+.set-row { grid-template-columns: 24px minmax(0, 0.8fr) minmax(0, 1.2fr) 36px; }
+.reps-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  margin-top: 6px;
+  border: 1px solid #626262;
+  border-radius: 8px;
+  background: #363636;
+}
+.reps-reference, .reps-current { min-width: 0; text-align: center; padding-top: 3px; }
+.reps-reference { background: #2b2b2b; border-radius: 7px 0 0 7px; border-right: 1px solid #626262; }
+.set-row .reps-caption { display: block; color: #bcbcbc; font-size: 10px; font-weight: 400; line-height: 14px; }
+.set-row .previous-reps { display: block; color: #bcbcbc; font-size: 16px; font-weight: 400; line-height: 30px; overflow-wrap: anywhere; }
+.set-row .reps { margin: 0; padding: 0 2px; min-height: 30px; height: 30px; border: 0; border-radius: 0 0 7px 0; background: transparent; appearance: textfield; -moz-appearance: textfield; }
+.reps::-webkit-inner-spin-button, .reps::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+@media (max-width: 480px) {
+  .set-row { grid-template-columns: 20px minmax(0, 0.8fr) minmax(0, 1.2fr) 32px; }
+}
