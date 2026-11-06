@@ -29,6 +29,15 @@
         <h2 id="historyCount">0 回</h2>
         <p class="muted">保存したトレーニング回数</p>
       </div>
+      <section class="card data-management" aria-labelledby="dataManagementTitle">
+        <p class="label">DATA MANAGEMENT</p>
+        <h2 id="dataManagementTitle">データ管理</h2>
+        <p class="muted">保存済みのトレーニング記録をJSONファイルに書き出します。</p>
+        <button class="primary-button" id="backupButton" type="button">バックアップを保存</button>
+        <button class="secondary-button" id="downloadBackupButton" type="button">JSONをダウンロード</button>
+        <p class="backup-help muted">iPhoneでは共有画面の「ファイルに保存」を選んでください。共有が使えない場合は「JSONをダウンロード」をお試しください。</p>
+        <p id="backupStatus" role="status" aria-live="polite"></p>
+      </section>
     </section>
 
     <section id="workoutScreen" hidden>

@@ -267,3 +267,7 @@ h1 { margin-bottom: 4px; }
 #workoutNotice { font-size: 13px; overflow-wrap: anywhere; }
 #workoutScreen button:disabled { opacity: 0.5; cursor: default; }
 #exerciseList input:disabled, #exerciseList select:disabled { opacity: 1; -webkit-text-fill-color: #ccc; }
+
+.data-management .backup-help, #backupStatus { font-size: 13px; overflow-wrap: anywhere; }
+#backupStatus:empty { display: none; }
+.data-management button:disabled { opacity: 0.5; cursor: wait; }

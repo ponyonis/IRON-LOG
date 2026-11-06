@@ -392,4 +392,85 @@ document.getElementById("saveButton").addEventListener("click", () => {
   showHome();
 });
 
+// Backups read storage directly so read failures are not mistaken for empty history.
+function createBackup() {
+  let workouts;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return null;
+    workouts = JSON.parse(raw);
+    if (!Array.isArray(workouts)) throw new Error("Invalid workout data");
+  } catch {
+    throw new Error("保存データを読み取れませんでした。ブラウザのアクセス制限やデータの状態を確認してください。元のデータは変更していません。");
+  }
+  if (workouts.length === 0) return null;
+  const now = new Date();
+  const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+  const payload = { app: "IRON-LOG", formatVersion: 1, exportedAt: now.toISOString(), workouts };
+  return {
+    filename: "IRON-LOG-backup-" + date + ".json",
+    blob: new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
+  };
+}
+
+function downloadBackup(backup) {
+  const url = URL.createObjectURL(backup.blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = backup.filename;
+  document.body.appendChild(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    // Safari may read the Blob after the click handler has returned.
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+}
+
+async function exportBackup(preferShare) {
+  const status = document.getElementById("backupStatus");
+  const buttons = [document.getElementById("backupButton"), document.getElementById("downloadBackupButton")];
+  buttons.forEach(button => { button.disabled = true; });
+  status.textContent = "";
+  try {
+    const backup = createBackup();
+    if (!backup) {
+      status.textContent = "バックアップできる保存済みのトレーニング記録がありません。";
+      return;
+    }
+    let file;
+    let canShare = false;
+    if (preferShare && window.isSecureContext && typeof File === "function" &&
+        typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+      try {
+        file = new File([backup.blob], backup.filename, { type: "application/json" });
+        canShare = navigator.canShare({ files: [file] });
+      } catch {
+        canShare = false;
+      }
+    }
+    if (canShare) {
+      try {
+        await navigator.share({ files: [file] });
+        status.textContent = "共有操作が完了しました。保存先にJSONファイルがあることを確認してください。";
+      } catch (error) {
+        status.textContent = error.name === "AbortError"
+          ? "共有がキャンセルされたか、共有先を利用できませんでした。再度保存するか「JSONをダウンロード」をお試しください。"
+          : "共有できませんでした。「JSONをダウンロード」から保存できます。";
+      }
+    } else {
+      downloadBackup(backup);
+      status.textContent = "JSONのダウンロードを開始しました。保存先を確認してください。内容が表示された場合は共有メニューから「ファイルに保存」を選んでください。";
+    }
+  } catch (error) {
+    status.textContent = error.message || "バックアップを書き出せませんでした。もう一度お試しください。";
+  } finally {
+    buttons.forEach(button => { button.disabled = false; });
+  }
+}
+
+document.getElementById("backupButton").addEventListener("click", () => exportBackup(true));
+document.getElementById("downloadBackupButton").addEventListener("click", () => exportBackup(false));
+
 updateHistory();
