@@ -37,6 +37,21 @@
         <button class="secondary-button" id="downloadBackupButton" type="button">JSONをダウンロード</button>
         <p class="backup-help muted">iPhoneでは共有画面の「ファイルに保存」を選んでください。共有が使えない場合は「JSONをダウンロード」をお試しください。</p>
         <p id="backupStatus" role="status" aria-live="polite"></p>
+        <div class="restore-section">
+          <h3>バックアップから復元</h3>
+          <p class="backup-help muted">先に現在の記録のバックアップを保存し、保存先にファイルがあることを確認してください。</p>
+          <label class="label" for="restoreFile">復元するJSONファイル</label>
+          <input id="restoreFile" type="file" accept=".json,application/json">
+          <div id="restorePreview" hidden>
+            <h3>復元内容の確認</h3>
+            <dl id="restoreSummary"></dl>
+            <p class="restore-warning">現在の全記録をバックアップの内容で置き換えます。元の記録は残りません。自動マージは行いません。入力途中の内容も破棄されます。</p>
+            <label class="restore-ack"><input id="restoreAcknowledged" type="checkbox">内容を確認し、現在の全記録を置き換えることに同意します。</label>
+            <button id="restoreConfirmButton" type="button" class="primary-button" disabled>全記録を置き換えて復元</button>
+          </div>
+          <button id="restoreCancelButton" type="button" class="secondary-button" hidden>復元をキャンセル</button>
+          <p id="restoreStatus" role="status" aria-live="polite"></p>
+        </div>
       </section>
     </section>
 

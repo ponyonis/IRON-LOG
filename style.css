@@ -271,3 +271,16 @@ h1 { margin-bottom: 4px; }
 .data-management .backup-help, #backupStatus { font-size: 13px; overflow-wrap: anywhere; }
 #backupStatus:empty { display: none; }
 .data-management button:disabled { opacity: 0.5; cursor: wait; }
+
+.restore-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid #444; }
+.restore-section h3 { font-size: 16px; }
+#restoreFile { display: block; max-width: 100%; font-size: 14px; }
+#restoreFile::file-selector-button { max-width: 100%; margin-right: 8px; }
+#restorePreview { background: #181818; padding: 14px; border: 1px solid #ff963d; border-radius: 10px; }
+#restoreSummary { margin: 0; font-size: 14px; }
+#restoreSummary dt { color: #aaa; margin-top: 8px; }
+#restoreSummary dd { margin: 0; overflow-wrap: anywhere; }
+.restore-warning { color: #ffb77c; font-size: 13px; }
+.restore-ack { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+#restoreAcknowledged { width: 20px; min-height: 20px; height: 20px; flex: 0 0 20px; margin: 2px 0 0; accent-color: #ff963d; }
+#restoreStatus { font-size: 13px; overflow-wrap: anywhere; }

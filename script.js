@@ -473,4 +473,111 @@ async function exportBackup(preferShare) {
 document.getElementById("backupButton").addEventListener("click", () => exportBackup(true));
 document.getElementById("downloadBackupButton").addEventListener("click", () => exportBackup(false));
 
+const restoreFile = document.getElementById("restoreFile");
+const restorePreview = document.getElementById("restorePreview");
+const restoreConfirm = document.getElementById("restoreConfirmButton");
+const restoreAck = document.getElementById("restoreAcknowledged");
+const restoreCancel = document.getElementById("restoreCancelButton");
+const restoreStatus = document.getElementById("restoreStatus");
+let pendingRestore = null;
+let restoreReadVersion = 0;
+
+function validateBackup(data) {
+  const object = value => value !== null && typeof value === "object" && !Array.isArray(value);
+  const date = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value + "T00:00:00Z")) && new Date(value + "T00:00:00Z").toISOString().slice(0, 10) === value;
+  const invalid = () => { throw new Error("対応していない形式、または記録データに不備があるバックアップです。"); };
+  if (!object(data) || data.app !== "IRON-LOG" || data.formatVersion !== 1 ||
+      typeof data.exportedAt !== "string" || !Number.isFinite(Date.parse(data.exportedAt)) ||
+      new Date(data.exportedAt).toISOString() !== data.exportedAt || !Array.isArray(data.workouts)) invalid();
+  for (const workout of data.workouts) {
+    if (!object(workout) || !Number.isSafeInteger(workout.id) || workout.id < 0 || !date(workout.date) ||
+        !Array.isArray(workout.exercises) || workout.exercises.length === 0) invalid();
+    for (const exercise of workout.exercises) {
+      if (!object(exercise) || typeof exercise.name !== "string" || exercise.name.trim() === "" ||
+          !Array.isArray(exercise.sets) || exercise.sets.length === 0) invalid();
+      for (const set of exercise.sets) {
+        if (!object(set) || typeof set.weight !== "number" || !Number.isFinite(set.weight) || set.weight < 0 ||
+            !Number.isSafeInteger(set.reps) || set.reps <= 0) invalid();
+      }
+    }
+  }
+  return data;
+}
+
+function resetRestore(message = "") {
+  restoreReadVersion++;
+  pendingRestore = null;
+  restoreFile.value = "";
+  restorePreview.hidden = true;
+  restoreAck.checked = false;
+  restoreConfirm.disabled = true;
+  restoreCancel.hidden = true;
+  restoreStatus.textContent = message;
+}
+
+restoreFile.addEventListener("change", async () => {
+  const file = restoreFile.files[0];
+  resetRestore();
+  if (!file) return;
+  const version = restoreReadVersion;
+  restoreCancel.hidden = false;
+  restoreStatus.textContent = "バックアップを読み込んでいます…";
+  try {
+    const text = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("ファイルを読み込めませんでした。もう一度選択してください。"));
+      reader.onabort = () => reject(new Error("ファイルの読み込みを中止しました。"));
+      reader.readAsText(file, "UTF-8");
+    });
+    if (version !== restoreReadVersion) return;
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("JSONとして読み込めません。ファイルが破損していないか確認してください。"); }
+    validateBackup(data);
+    const original = localStorage.getItem(STORAGE_KEY);
+    const current = original === null ? [] : JSON.parse(original);
+    if (!Array.isArray(current)) throw new Error("現在の保存データを確認できないため、復元を中止しました。");
+    pendingRestore = { data, original };
+    const summary = document.getElementById("restoreSummary");
+    summary.replaceChildren();
+    [["バックアップ日時", new Date(data.exportedAt).toLocaleString("ja-JP")], ["現在の記録", current.length + " 件"], ["復元対象の記録", data.workouts.length + " 件"]].forEach(([label, value]) => {
+      const term = document.createElement("dt"); term.textContent = label;
+      const detail = document.createElement("dd"); detail.textContent = value;
+      summary.append(term, detail);
+    });
+    restorePreview.hidden = false;
+    restoreStatus.textContent = "検証が完了しました。まだ保存データは変更していません。";
+  } catch (error) {
+    if (version === restoreReadVersion) resetRestore((error.message || "読み込みに失敗しました。") + " 既存データは変更していません。");
+  }
+});
+restoreAck.addEventListener("change", () => {
+  restoreConfirm.disabled = !pendingRestore || restorePreview.hidden || !restoreAck.checked;
+});
+restoreCancel.addEventListener("click", () => resetRestore("復元をキャンセルしました。既存データは変更していません。"));
+restoreFile.addEventListener("cancel", () => resetRestore("ファイル選択をキャンセルしました。既存データは変更していません。"));
+restoreConfirm.addEventListener("click", () => {
+  if (!pendingRestore || restorePreview.hidden || !restoreAck.checked) return;
+  if (!confirm("最終確認：現在の全記録をバックアップの内容で置き換えます。この操作で元の記録と入力途中の内容は失われます。現在のバックアップが必要ならキャンセルしてください。復元を実行しますか？")) return;
+  try {
+    if (localStorage.getItem(STORAGE_KEY) !== pendingRestore.original) {
+      resetRestore("確認中に保存データが変わりました。安全のため中止しました。ファイルを選び直してください。");
+      return;
+    }
+    // setItem is atomic: if it throws, the previous value remains unchanged.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingRestore.data.workouts));
+  } catch {
+    restoreStatus.textContent = "復元を書き込めませんでした。成功していません。既存データは変更していません。容量やブラウザのアクセス制限を確認してください。";
+    return;
+  }
+  activeDate = "";
+  baseline = "";
+  savedDay = false;
+  exerciseList.replaceChildren();
+  updateHistory();
+  showHome();
+  resetRestore("復元が完了しました。履歴を更新しました。");
+});
+
 updateHistory();
