@@ -1,0 +1,6 @@
+# Track only the application source and this rule file.
+/*
+!/.gitignore
+!/index.html
+!/style.css
+!/script.js

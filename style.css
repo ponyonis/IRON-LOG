@@ -1,0 +1,237 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #111111;
+  color: #ffffff;
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+.container {
+  max-width: 550px;
+  margin: auto;
+}
+
+header {
+  margin-bottom: 25px;
+}
+
+h1 {
+  color: #ff963d;
+  font-size: 32px;
+  letter-spacing: 2px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+.subtitle, .label, .muted {
+  color: #aaaaaa;
+}
+
+.subtitle {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.card {
+  background: #222222;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+button, input, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.primary-button,
+.secondary-button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+.primary-button {
+  background: #ff963d;
+  color: #111111;
+}
+
+.secondary-button {
+  background: #383838;
+  color: white;
+}
+
+.small-button {
+  background: #383838;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+input, select {
+  width: 100%;
+  background: #333333;
+  color: white;
+  border: 1px solid #555555;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.exercise-card {
+  background: #303030;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 16px;
+}
+
+.exercise-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.exercise-title select {
+  flex: 1;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 35px 1fr 1fr 35px;
+  gap: 6px;
+  align-items: center;
+}
+
+.set-row span {
+  color: #ff963d;
+  text-align: center;
+  font-weight: bold;
+}
+
+.set-row input {
+  text-align: center;
+  padding: 10px 4px;
+}
+
+.remove-button {
+  background: #553333;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  padding: 8px;
+}
+
+.save-button {
+  margin-top: 25px;
+}
+
+.history-item {
+  border-top: 1px solid #444444;
+  padding: 14px 0;
+}
+
+.history-item p {
+  margin: 6px 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 380px) {
+  body {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+}
+/* Training screen: separate saved reference data from editable fields. */
+:root {
+  color-scheme: dark;
+  --accent: #ff963d;
+}
+body { background: #101010; line-height: 1.6; }
+.container { max-width: 640px; }
+button { min-height: 44px; touch-action: manipulation; }
+input, select { min-height: 48px; font-size: 16px; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+h1 { margin-bottom: 4px; }
+.card { border: 1px solid #333; }
+#workoutScreen > .card { padding: 24px; background: #1b1b1b; }
+.section-heading { gap: 12px; }
+.section-heading h2 { margin: 0; }
+.workout-eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 1.6px; margin: 0 0 6px; }
+#workoutDate { max-width: 100%; margin-bottom: 4px; }
+.exercise-card { background: #242424; border: 1px solid #3c3c3c; padding: 20px; border-radius: 16px; margin-top: 24px; }
+.exercise-title { align-items: center; margin-bottom: 18px; }
+.exercise-title select { margin: 0; background: #181818; font-weight: 600; }
+.remove-exercise { flex-shrink: 0; color: #e6b9b1; background: #382827; }
+.previous-record { background: #181818; border: 1px solid #414141; border-left: 3px solid var(--accent); border-radius: 10px; padding: 16px; }
+.previous-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.previous-heading h3 { font-size: 14px; margin: 0; color: #d1d1d1; }
+.previous-heading time { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--accent); }
+.previous-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-variant-numeric: tabular-nums; }
+.previous-table th { color: #a9a9a9; font-size: 12px; font-weight: 400; }
+.previous-table th, .previous-table td { text-align: right; padding: 8px 4px; border-bottom: 1px solid #303030; }
+.previous-table th:first-child, .previous-table td:first-child { text-align: left; }
+.previous-table td { font-size: 16px; }
+.previous-table tbody tr:last-child td { border-bottom: 0; }
+.previous-empty { color: #aaa; margin: 12px 0 0; font-size: 14px; }
+.current-record { margin-top: 24px; }
+.current-record h3 { margin: 0; font-size: 16px; }
+.current-record h3 > span { margin-left: 8px; background: #ff963d20; color: var(--accent); padding: 3px 8px; border-radius: 5px; font-size: 11px; }
+.input-help { font-size: 12px; color: #aaa; margin: 6px 0 16px; }
+.set-row { grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 36px; gap: 10px; margin-top: 12px; align-items: end; }
+.set-row .set-number { align-self: end; line-height: 48px; color: #aaa; font-size: 14px; }
+.set-field { display: block; min-width: 0; font-size: 12px; color: #ccc; }
+.set-field .unit { color: #999; font-size: 11px; font-weight: 400; }
+.set-row input { margin: 6px 0 0; background: #363636; border-color: #626262; padding: 12px 6px; font-weight: 600; }
+.set-row .remove-set { min-height: 48px; background: #383030; font-size: 20px; }
+.add-set { background: transparent; border: 1px dashed #646464; margin-top: 20px; color: #ddd; }
+.save-button { min-height: 54px; }
+.history-item { overflow-wrap: anywhere; }
+.history-item p { color: #bcbcbc; font-size: 14px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 480px) {
+  body { padding: 16px 12px; }
+  #workoutScreen > .card { padding: 16px 12px; }
+  .exercise-card { padding: 16px 12px; }
+  .previous-record { padding: 12px; }
+  .set-row { gap: 8px; grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 32px; }
+  .exercise-title { flex-wrap: wrap; }
+  .exercise-title select { flex-basis: 100%; }
+  .remove-exercise { margin-left: auto; font-size: 12px; }
+}
