@@ -263,3 +263,7 @@ h1 { margin-bottom: 4px; }
 @media (max-width: 480px) {
   .set-row { grid-template-columns: 20px minmax(0, 0.8fr) minmax(0, 1.2fr) 32px; }
 }
+
+#workoutNotice { font-size: 13px; overflow-wrap: anywhere; }
+#workoutScreen button:disabled { opacity: 0.5; cursor: default; }
+#exerciseList input:disabled, #exerciseList select:disabled { opacity: 1; -webkit-text-fill-color: #ccc; }

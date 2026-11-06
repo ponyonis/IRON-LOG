@@ -18,7 +18,57 @@ const workoutScreen = document.getElementById("workoutScreen");
 const exerciseList = document.getElementById("exerciseList");
 const workoutDate = document.getElementById("workoutDate");
 
-let workoutNumber = 0;
+let activeDate = "";
+let baseline = "";
+let savedDay = false;
+
+function setValues(card) {
+  return JSON.stringify([...card.querySelectorAll(".set-row")].map(row => [row.querySelector(".weight").value, row.querySelector(".reps").value]));
+}
+
+function draftValues() {
+  return JSON.stringify([...exerciseList.children].map(card => [card.dataset.name, setValues(card)]));
+}
+
+function initializeSets(card, savedExercise = null) {
+  const previous = getPreviousExercise(card.querySelector(".exercise-name").value);
+  const source = savedExercise?.sets ?? previous?.exercise.sets;
+  card.querySelector(".sets").replaceChildren();
+  (source?.length ? source : [null]).forEach(set => {
+    addSet(card);
+    const row = card.querySelector(".sets").lastElementChild;
+    row.querySelector(".weight").value = set?.weight ?? "";
+    row.querySelector(".reps").value = savedExercise ? (set?.reps ?? "") : "";
+  });
+  card.dataset.name = card.querySelector(".exercise-name").value;
+  card.dataset.baseline = setValues(card);
+  updatePreviousRecord(card);
+}
+
+function renderDate(names = [exercises[0]]) {
+  const records = getWorkouts().filter(workout => workout.date === workoutDate.value);
+  savedDay = records.length > 0;
+  exerciseList.replaceChildren();
+  if (savedDay) {
+    records.forEach(workout => workout.exercises.forEach(exercise => createExercise(exercise.name, exercise)));
+  } else {
+    names.forEach(name => createExercise(name));
+  }
+  exerciseList.querySelectorAll("input, select, button").forEach(control => { control.disabled = savedDay; });
+  document.getElementById("addExerciseButton").disabled = savedDay;
+  document.getElementById("saveButton").disabled = savedDay;
+  document.getElementById("workoutNotice").textContent = savedDay
+    ? "この日付には保存済みの記録があります。既存の当日記録を参照表示しています。重複保存・上書きはできません。新しい記録は別の日付を選択してください。"
+    : "前回のセット数と重量を引き継いでいます。今回の回数を入力してください。";
+  if (savedDay) {
+    exerciseList.querySelectorAll(".current-record h3").forEach(title => { title.textContent = "保存済みの当日記録"; });
+    exerciseList.querySelectorAll(".input-help").forEach(help => { help.textContent = "保存済み記録の参照表示です。"; });
+    exerciseList.querySelectorAll(".reps-current .reps-caption").forEach(label => { label.textContent = "当日"; });
+  }
+  activeDate = workoutDate.value;
+  baseline = draftValues();
+}
+
 
 function getWorkouts() {
   try {
@@ -42,7 +92,7 @@ function getPreviousExercise(name) {
 
   const matches = workouts
     .filter(workout =>
-      workout.date <= workoutDate.value &&
+      workout.date < workoutDate.value &&
       workout.exercises.some(exercise => exercise.name === name)
     )
     .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
@@ -117,7 +167,7 @@ function updatePreviousRecord(card) {
   display.appendChild(table);
 }
 
-function createExercise() {
+function createExercise(name = exercises[0], savedExercise = null) {
   const card = document.createElement("div");
   card.className = "exercise-card";
 
@@ -142,8 +192,12 @@ function createExercise() {
   `;
 
   exerciseList.appendChild(card);
-  addSet(card);
-  updatePreviousRecord(card);
+  const select = card.querySelector(".exercise-name");
+  if (![...select.options].some(option => option.value === name)) {
+    select.add(new Option(name, name));
+  }
+  select.value = name;
+  initializeSets(card, savedExercise);
 }
 
 function addSet(card) {
@@ -217,33 +271,43 @@ function updateHistory() {
 }
 
 exerciseList.addEventListener("change", event => {
-  if (event.target.classList.contains("exercise-name")) {
-    const card = event.target.closest(".exercise-card");
-    updatePreviousRecord(card);
+  if (!event.target.classList.contains("exercise-name")) return;
+  const card = event.target.closest(".exercise-card");
+  if (setValues(card) !== card.dataset.baseline &&
+      !confirm("種目を変更すると、この種目の入力内容とセット構成を置き換えます。変更しますか？")) {
+    event.target.value = card.dataset.name;
+    return;
   }
+  initializeSets(card);
 });
 
 workoutDate.addEventListener("change", () => {
-  exerciseList.querySelectorAll(".exercise-card").forEach(card => {
-    updatePreviousRecord(card);
-  });
+  if (workoutDate.value === activeDate) return;
+  if (!workoutDate.value || (!savedDay && draftValues() !== baseline &&
+      !confirm("日付を変更すると、入力中の内容とセット構成を置き換えます。変更しますか？"))) {
+    workoutDate.value = activeDate;
+    return;
+  }
+  const names = [...exerciseList.children].map(card => card.dataset.name);
+  renderDate(names.length ? names : [exercises[0]]);
 });
 document.getElementById("startButton").addEventListener("click", () => {
-  exerciseList.innerHTML = "";
-  workoutDate.value = new Date().toLocaleDateString("en-CA");
-  createExercise();
+  if (!activeDate) {
+    workoutDate.value = new Date().toLocaleDateString("en-CA");
+    renderDate();
+  }
   showWorkout();
 });
 
 document.getElementById("backButton").addEventListener("click", showHome);
 
 document.getElementById("addExerciseButton").addEventListener("click", () => {
-  createExercise();
+  if (!savedDay) createExercise();
 });
 
 exerciseList.addEventListener("click", event => {
   const card = event.target.closest(".exercise-card");
-  if (!card) return;
+  if (!card || savedDay) return;
 
   if (event.target.classList.contains("add-set")) {
     addSet(card);
@@ -264,6 +328,10 @@ exerciseList.addEventListener("click", event => {
 });
 
 document.getElementById("saveButton").addEventListener("click", () => {
+  if (getWorkouts().some(workout => workout.date === workoutDate.value)) {
+    alert("この日付には保存済みの記録があります。重複保存・上書きは行いません。入力内容は保持しています。");
+    return;
+  }
   const cards = [...exerciseList.querySelectorAll(".exercise-card")];
 
   if (!workoutDate.value || cards.length === 0) {
@@ -320,6 +388,7 @@ document.getElementById("saveButton").addEventListener("click", () => {
 
   alert("トレーニング記録を保存しました！");
   updateHistory();
+  activeDate = "";
   showHome();
 });
 
