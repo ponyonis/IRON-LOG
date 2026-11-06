@@ -194,7 +194,14 @@ h1 { margin-bottom: 4px; }
 .section-heading { gap: 12px; }
 .section-heading h2 { margin: 0; }
 .workout-eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 1.6px; margin: 0 0 6px; }
-#workoutDate { max-width: 100%; margin-bottom: 4px; }
+/* Avoid iOS Safari's native date-control width overriding the border box. */
+#workoutDate {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  max-width: 100%;
+  margin-bottom: 4px;
+}
 .exercise-card { background: #242424; border: 1px solid #3c3c3c; padding: 20px; border-radius: 16px; margin-top: 24px; }
 .exercise-title { align-items: center; margin-bottom: 18px; }
 .exercise-title select { margin: 0; background: #181818; font-weight: 600; }
